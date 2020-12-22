@@ -33,6 +33,9 @@ from .util import bfh, bh2u
 from .simple_config import SimpleConfig
 from .logging import get_logger, Logger
 
+from .heavyhash import _heavyhash
+from .heavyhash_matrix import generate_heavyhash_matrix
+
 
 _logger = get_logger(__name__)
 
@@ -76,11 +79,14 @@ def hash_header(header: dict) -> str:
         return '0' * 64
     if header.get('prev_block_hash') is None:
         header['prev_block_hash'] = '00'*32
+    prev_block_hash = header['prev_block_hash']
     return hash_raw_header(serialize_header(header))
 
-
-def hash_raw_header(header: str) -> str:
-    return hash_encode(sha256d(bfh(header)))
+def hash_raw_header(prev_block_hash: str, header: str) -> str:
+    seed_int = int.from_bytes(bfh(prev_block_hash))
+    matrix_seed = generate_heavyhash_matrix(seed_int)
+    return _heavyhash(matrix_seed, bfh(header))
+    # return hash_encode(sha256d(bfh(header)))
 
 
 # key: blockhash hex at forkpoint
@@ -392,6 +398,7 @@ class Blockchain(Logger):
         parent_branch_size = self.parent.height() - self.forkpoint + 1
         forkpoint = self.forkpoint  # type: Optional[int]
         parent = self.parent  # type: Optional[Blockchain]
+        parent_prev_hash = parent._prev_hash
         child_old_id = self.get_id()
         parent_old_id = parent.get_id()
         # swap files
@@ -412,7 +419,7 @@ class Blockchain(Logger):
         # swap parameters
         self.parent, parent.parent = parent.parent, self  # type: Optional[Blockchain], Optional[Blockchain]
         self.forkpoint, parent.forkpoint = parent.forkpoint, self.forkpoint
-        self._forkpoint_hash, parent._forkpoint_hash = parent._forkpoint_hash, hash_raw_header(bh2u(parent_data[:HEADER_SIZE]))
+        self._forkpoint_hash, parent._forkpoint_hash = parent._forkpoint_hash, hash_raw_header(parent_prev_hash, bh2u(parent_data[:HEADER_SIZE]))
         self._prev_hash, parent._prev_hash = parent._prev_hash, self._prev_hash
         # parent's new name
         os.replace(child_old_name, parent.path())
