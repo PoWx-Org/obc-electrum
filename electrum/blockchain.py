@@ -80,7 +80,7 @@ def hash_header(header: dict) -> str:
     if header.get('prev_block_hash') is None:
         header['prev_block_hash'] = '00'*32
     prev_block_hash = header['prev_block_hash']
-    return hash_raw_header(serialize_header(header))
+    return hash_raw_header(prev_block_hash, serialize_header(header))
 
 def hash_raw_header(prev_block_hash: str, header: str) -> str:
     seed_int = int.from_bytes(bfh(prev_block_hash))
