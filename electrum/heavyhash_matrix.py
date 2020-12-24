@@ -29,4 +29,4 @@ def is_4bit_precision(m: np.ndarray) -> bool:
 
 
 def is_full_rank(m: np.ndarray) -> bool:
-    np.linalg.matrix_rank(m) == 64
+    return np.linalg.matrix_rank(m) == 64
