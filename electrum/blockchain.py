@@ -33,9 +33,6 @@ from .util import bfh, bh2u
 from .simple_config import SimpleConfig
 from .logging import get_logger, Logger
 
-from .heavyhash import _heavyhash
-from .heavyhash_matrix import generate_heavyhash_matrix
-
 
 _logger = get_logger(__name__)
 
