@@ -76,13 +76,9 @@ def hash_header(header: dict) -> str:
         return '0' * 64
     if header.get('prev_block_hash') is None:
         header['prev_block_hash'] = '00'*32
-    prev_block_hash = header['prev_block_hash']
     return hash_raw_header(serialize_header(header))
 
 def hash_raw_header(header: str) -> str:
-    # seed_int = int.from_bytes(bfh(prev_block_hash), byteorder='big')
-    # matrix_seed = generate_heavyhash_matrix(seed_int)
-    # return _heavyhash(matrix_seed, bfh(header))
     return hash_encode(sha256d(bfh(header)))
 
 
@@ -395,7 +391,6 @@ class Blockchain(Logger):
         parent_branch_size = self.parent.height() - self.forkpoint + 1
         forkpoint = self.forkpoint  # type: Optional[int]
         parent = self.parent  # type: Optional[Blockchain]
-        parent_prev_hash = parent._prev_hash
         child_old_id = self.get_id()
         parent_old_id = parent.get_id()
         # swap files
