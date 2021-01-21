@@ -778,8 +778,9 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             self.show_error(_('No donation address for this server'))
 
     def show_about(self):
-        QMessageBox.about(self, "Electrum",
+        QMessageBox.about(self, "Optical Electrum",
                           (_("Version")+" %s" % ELECTRUM_VERSION + "\n\n" +
+                           _("This is a electrum fork, that is compatible with optical bitcoin - OBTC.") + "\n\n" +
                            _("Electrum's focus is speed, with low resource usage and simplifying Bitcoin.") + " " +
                            _("You do not need to perform regular backups, because your wallet can be "
                               "recovered from a secret phrase that you can memorize or write on paper.") + " " +
