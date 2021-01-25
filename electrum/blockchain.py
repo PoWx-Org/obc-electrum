@@ -308,8 +308,12 @@ class Blockchain(Logger):
         if bits != header.get('bits'):
             raise Exception("bits mismatch: %s vs %s" % (bits, header.get('bits')))
         block_hash_as_num = int.from_bytes(bfh(_hash), byteorder='big')
-        # if block_hash_as_num > target:
-        #     raise Exception(f"insufficient proof of work: {block_hash_as_num} vs target {target}")
+        block_height = header["block_height"]
+        # First block is a very special one... In oPoW network, it doesn't satisfy difficulty check
+        if block_height <= 1:
+            return
+        if block_hash_as_num > target:
+            raise Exception(f"insufficient proof of work: {block_hash_as_num} vs target {target}")
 
     def verify_chunk(self, index: int, data: bytes) -> None:
         num = len(data) // HEADER_SIZE
@@ -619,6 +623,7 @@ class Blockchain(Logger):
         try:
             self.verify_header(header, prev_hash, target)
         except BaseException as e:
+            self.logger.info(f"verify_header failed for header #{height}")
             return False
         return True
 
