@@ -83,9 +83,9 @@ def hash_header(header: dict) -> str:
     return hash_raw_header(prev_block_hash, serialize_header(header))
 
 def hash_raw_header(prev_block_hash: str, header: str) -> str:
-    seed_int = int.from_bytes(bfh(prev_block_hash))
+    seed_int = int.from_bytes(bfh(prev_block_hash), byteorder='big')
     matrix_seed = generate_heavyhash_matrix(seed_int)
-    return _heavyhash(matrix_seed, bfh(header))
+    return hash_encode(_heavyhash(matrix_seed, bfh(header)))
     # return hash_encode(sha256d(bfh(header)))
 
 
