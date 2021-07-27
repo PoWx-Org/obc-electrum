@@ -36,6 +36,9 @@ from .logging import get_logger, Logger
 from .heavyhash import _heavyhash
 from .heavyhash_matrix import generate_heavyhash_matrix
 
+from hashlib import sha3_256
+
+
 
 _logger = get_logger(__name__)
 
@@ -83,9 +86,17 @@ def hash_header(header: dict) -> str:
     return hash_raw_header(prev_block_hash, serialize_header(header))
 
 def hash_raw_header(prev_block_hash: str, header: str) -> str:
-    seed_int = int.from_bytes(bfh(prev_block_hash), byteorder='big')
-    matrix_seed = generate_heavyhash_matrix(seed_int)
-    return hash_encode(_heavyhash(matrix_seed, bfh(header)))
+    #seed_int = int.from_bytes(bfh(prev_block_hash), byteorder='big')
+    #matrix_seed = generate_heavyhash_matrix(seed_int)
+    #return hash_encode(_heavyhash(matrix_seed, bfh(header)))
+    seed_bytes = sha3_256(bfh(prev_block_hash)[::-1]).digest()
+    matrix_seed = generate_heavyhash_matrix(seed_bytes)
+
+    hash_input = bfh(header)
+    #hash_input = hash_input[::-1]
+    print(f'Heavyhash input: {hash_input.hex()}')
+    print(f'Heavyhash result: {_heavyhash(matrix_seed, hash_input).hex()}')
+    return hash_encode(_heavyhash(matrix_seed, hash_input))
     # return hash_encode(sha256d(bfh(header)))
 
 
@@ -266,7 +277,9 @@ class Blockchain(Logger):
         """
         assert isinstance(header_hash, str) and len(header_hash) == 64, header_hash  # hex
         try:
-            return header_hash == self.get_hash(height)
+            other_hash = self.get_hash(height)
+            print(f'!!!DBG: Check header of height {height}. Generated hash = "{header_hash}". Compare with "{other_hash}"')
+            return header_hash == other_hash
         except Exception:
             return False
 
@@ -303,7 +316,7 @@ class Blockchain(Logger):
         self._size = os.path.getsize(p)//HEADER_SIZE if os.path.exists(p) else 0
 
     @classmethod
-    def verify_header(cls, header: dict, prev_hash: str, target: int, expected_header_hash: str=None) -> None:
+    def verify_header(cls, header: dict, prev_hash: str, expected_header_hash: str=None) -> None:
         _hash = hash_header(header)
         if expected_header_hash and expected_header_hash != _hash:
             raise Exception("hash mismatches with expected: {} vs {}".format(expected_header_hash, _hash))
@@ -311,14 +324,14 @@ class Blockchain(Logger):
             raise Exception("prev hash mismatch: %s vs %s" % (prev_hash, header.get('prev_block_hash')))
         if constants.net.TESTNET:
             return
-        bits = cls.target_to_bits(target)
-        if bits != header.get('bits'):
-            raise Exception("bits mismatch: %s vs %s" % (bits, header.get('bits')))
-        block_hash_as_num = int.from_bytes(bfh(_hash), byteorder='big')
+
         block_height = header["block_height"]
         # First block is a very special one... In oPoW network, it doesn't satisfy difficulty check
         if block_height <= 1:
             return
+
+        block_hash_as_num = int.from_bytes(bfh(_hash), byteorder='big')
+        target = cls.bits_to_target(header.get('bits'))
         if block_hash_as_num > target:
             raise Exception(f"insufficient proof of work: {block_hash_as_num} vs target {target}")
 
@@ -614,23 +627,24 @@ class Blockchain(Logger):
             return False
         height = header['block_height']
         if check_height and self.height() != height - 1:
+            print(f'DBG: check_height is {check_height}, self.height = {self.height()}, height - 1 = {height - 1}')
             return False
         if height == 0:
+            print(f'DBG: height = 0, hash_header = {hash_header(header)}, is equal to GENESIS: {hash_header(header) == constants.net.GENESIS}')
             return hash_header(header) == constants.net.GENESIS
         try:
             prev_hash = self.get_hash(height - 1)
         except:
+            print('DBG: Exception occured')
             return False
         if prev_hash != header.get('prev_block_hash'):
+            print(f'DBG: prev_hash "{prev_hash}" != prev_block_hash "{header.get("prev_block_hash")}"')
             return False
         try:
-            target = self.get_target(height // 2016 - 1)
-        except MissingHeader:
-            return False
-        try:
-            self.verify_header(header, prev_hash, target)
+            self.verify_header(header, prev_hash)
         except BaseException as e:
             self.logger.info(f"verify_header failed for header #{height}")
+            print(f'DBG: verify_header failed: {e}')
             return False
         return True
 
