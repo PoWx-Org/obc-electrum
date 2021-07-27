@@ -295,7 +295,8 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
                                        _("Would you like to be notified when there is a newer version of Electrum available?"))
             config.set_key('check_updates', bool(choice), save=True)
 
-        if config.get('check_updates', False):
+        #if config.get('check_updates', False):
+        if False:
             # The references to both the thread and the window need to be stored somewhere
             # to prevent GC from getting in our way.
             def on_version_received(v):
@@ -759,7 +760,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
 
         help_menu = menubar.addMenu(_("&Help"))
         help_menu.addAction(_("&About"), self.show_about)
-        help_menu.addAction(_("&Check for updates"), self.show_update_check)
+        #help_menu.addAction(_("&Check for updates"), self.show_update_check)
         help_menu.addAction(_("&Official website"), lambda: webopen("https://electrum.org"))
         help_menu.addSeparator()
         help_menu.addAction(_("&Documentation"), lambda: webopen("http://docs.electrum.org/")).setShortcut(QKeySequence.HelpContents)
