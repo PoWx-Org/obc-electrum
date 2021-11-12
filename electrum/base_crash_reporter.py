@@ -23,15 +23,14 @@ import asyncio
 import json
 import locale
 import traceback
-import subprocess
 import sys
-import os
+import queue
 
 from .version import ELECTRUM_VERSION
 from . import constants
 from .i18n import _
 from .util import make_aiohttp_session
-from .logging import describe_os_version, Logger
+from .logging import describe_os_version, Logger, get_git_version
 
 
 class BaseCrashReporter(Logger):
@@ -57,6 +56,8 @@ class BaseCrashReporter(Logger):
                              'useful debug information:')
     DESCRIBE_ERROR_MESSAGE = _("Please briefly describe what led to the error (optional):")
     ASK_CONFIRM_SEND = _("Do you want to send this report?")
+    USER_COMMENT_PLACEHOLDER = _("Do not enter sensitive/private information here. "
+                                 "The report will be visible on the public issue tracker.")
 
     def __init__(self, exctype, value, tb):
         Logger.__init__(self)
@@ -81,7 +82,7 @@ class BaseCrashReporter(Logger):
     def get_traceback_info(self):
         exc_string = str(self.exc_args[1])
         stack = traceback.extract_tb(self.exc_args[2])
-        readable_trace = "".join(traceback.format_list(stack))
+        readable_trace = self.__get_traceback_str_to_send()
         id = {
             "file": stack[-1].filename,
             "name": stack[-1].name,
@@ -95,7 +96,7 @@ class BaseCrashReporter(Logger):
 
     def get_additional_info(self):
         args = {
-            "app_version": ELECTRUM_VERSION,
+            "app_version": get_git_version() or ELECTRUM_VERSION,
             "python_version": sys.version,
             "os": describe_os_version(),
             "wallet_type": "unknown",
@@ -107,26 +108,21 @@ class BaseCrashReporter(Logger):
         except:
             # Maybe the wallet isn't loaded yet
             pass
-        try:
-            args["app_version"] = self.get_git_version()
-        except:
-            # This is probably not running from source
-            pass
         return args
 
-    @staticmethod
-    def get_git_version():
-        dir = os.path.dirname(os.path.realpath(sys.argv[0]))
-        version = subprocess.check_output(
-            ['git', 'describe', '--always', '--dirty'], cwd=dir)
-        return str(version, "utf8").strip()
-
-    def _get_traceback_str(self) -> str:
+    def __get_traceback_str_to_send(self) -> str:
+        # make sure that traceback sent to crash reporter contains
+        # e.__context__ and e.__cause__, i.e. if there was a chain of
+        # exceptions, we want the full traceback for the whole chain.
         return "".join(traceback.format_exception(*self.exc_args))
+
+    def _get_traceback_str_to_display(self) -> str:
+        # overridden in Qt subclass
+        return self.__get_traceback_str_to_send()
 
     def get_report_string(self):
         info = self.get_additional_info()
-        info["traceback"] = self._get_traceback_str()
+        info["traceback"] = self._get_traceback_str_to_display()
         return self.issue_template.format(**info)
 
     def get_user_description(self):
@@ -134,6 +130,43 @@ class BaseCrashReporter(Logger):
 
     def get_wallet_type(self) -> str:
         raise NotImplementedError
+
+
+class EarlyExceptionsQueue:
+    """Helper singleton for explicitly sending exceptions to crash reporter.
+
+    Typically the GUIs set up an "exception hook" that catches all otherwise
+    uncaught exceptions (which unroll the stack of a thread completely).
+    This class provides methods to report *any* exception, and queueing logic
+    that delays processing until the exception hook is set up.
+    """
+
+    _is_exc_hook_ready = False
+    _exc_queue = queue.Queue()
+
+    @classmethod
+    def set_hook_as_ready(cls):
+        if cls._is_exc_hook_ready:
+            return
+        cls._is_exc_hook_ready = True
+        while cls._exc_queue.qsize() > 0:
+            e = cls._exc_queue.get()
+            cls._send_exception_to_crash_reporter(e)
+
+    @classmethod
+    def send_exception_to_crash_reporter(cls, e: BaseException):
+        if cls._is_exc_hook_ready:
+            cls._send_exception_to_crash_reporter(e)
+        else:
+            cls._exc_queue.put(e)
+
+    @staticmethod
+    def _send_exception_to_crash_reporter(e: BaseException):
+        assert EarlyExceptionsQueue._is_exc_hook_ready
+        sys.excepthook(type(e), e, e.__traceback__)
+
+
+send_exception_to_crash_reporter = EarlyExceptionsQueue.send_exception_to_crash_reporter
 
 
 def trigger_crash():
