@@ -94,8 +94,6 @@ def hash_raw_header(prev_block_hash: str, header: str) -> str:
 
     hash_input = bfh(header)
     #hash_input = hash_input[::-1]
-    print(f'Heavyhash input: {hash_input.hex()}')
-    print(f'Heavyhash result: {_heavyhash(matrix_seed, hash_input).hex()}')
     return hash_encode(_heavyhash(matrix_seed, hash_input))
     # return hash_encode(sha256d(bfh(header)))
 

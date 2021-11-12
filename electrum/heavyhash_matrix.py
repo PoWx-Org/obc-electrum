@@ -1,5 +1,6 @@
 import math
 
+debug = False
 
 # def generate_heavyhash_matrix(matrix_seed: int) -> np.ndarray:
 #     generator = pure_prng(matrix_seed, 'xoshiro256++')
@@ -26,7 +27,8 @@ def is_4bit_precision(m: [[int]]) -> bool:
     for i in range(64):
         for j in range(64):
             if m[i][j] < 0 or m[i][j] > 0xF:
-                print(f'Matrix is not 4bit precision at pos [{i}, {j}]: {m[i][j]}')
+                if (debug):
+                    print(f'Matrix is not 4bit precision at pos [{i}, {j}]: {m[i][j]}')
                 return False
     return True
 
@@ -44,7 +46,8 @@ def generate_heavyhash_matrix(matrix_seed):
     for b in matrix_seed:
         hashStr += "%0.2X" % b
 
-    print(f'Matrix generation seed: 0x{hashStr}')
+    if (debug):
+        print(f'Matrix generation seed: 0x{hashStr}')
     return generate_heavyhash_matrix_internal(xoshiro256pp_seeding(matrix_seed))
 
 def generate_heavyhash_matrix_internal(s):
@@ -153,8 +156,10 @@ def MatrixRank(A):
 		for z in A:
 			if(z==[0]*colnum):
 				c=c+1
+
+		if debug:
+				print(Rank - c)
 	return Rank-c
-	print(Rank - c)
 
 def get_uint64(data, pos):
     ptr = pos*8
