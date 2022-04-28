@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Electrum - lightweight Bitcoin client
+# Electrum - lightweight Optical Bitcoin client
 # Copyright (C) 2012 thomasv@gitorious
 #
 # Permission is hereby granted, free of charge, to any person
@@ -204,7 +204,7 @@ class SettingsDialog(WindowModalDialog):
         # units
         units = base_units_list
         msg = (_('Base unit of your wallet.')
-               + '\n1 BTC = 1000 mBTC. 1 mBTC = 1000 bits. 1 bit = 100 sat.\n'
+               + '\n1 OBTC = 1000 mOBTC. 1 mOBTC = 1000 bits. 1 bit = 100 sat.\n'
                + _('This setting affects the Send tab, and all balance related fields.'))
         unit_label = HelpLabel(_('Base unit') + ':', msg)
         unit_combo = QComboBox()
@@ -225,7 +225,7 @@ class SettingsDialog(WindowModalDialog):
         unit_combo.currentIndexChanged.connect(lambda x: on_unit(x, nz))
         gui_widgets.append((unit_label, unit_combo))
 
-        thousandsep_cb = QCheckBox(_("Add thousand separators to bitcoin amounts"))
+        thousandsep_cb = QCheckBox(_("Add thousand separators to optical bitcoin amounts"))
         thousandsep_cb.setChecked(bool(self.config.get('amt_add_thousands_sep', False)))
         def on_set_thousandsep(v):
             checked = v == Qt.Checked
