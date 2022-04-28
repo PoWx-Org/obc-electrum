@@ -220,7 +220,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         self.utxo_tab = self.create_utxo_tab()
         self.console_tab = self.create_console_tab()
         self.contacts_tab = self.create_contacts_tab()
-        self.channels_tab = self.create_channels_tab()
+        # self.channels_tab = self.create_channels_tab()
         tabs.addTab(self.create_history_tab(), read_QIcon("tab_history.png"), _('History'))
         tabs.addTab(self.send_tab, read_QIcon("tab_send.png"), _('Send'))
         tabs.addTab(self.receive_tab, read_QIcon("tab_receive.png"), _('Receive'))
@@ -234,7 +234,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
                 tabs.addTab(tab, icon, description.replace("&", ""))
 
         add_optional_tab(tabs, self.addresses_tab, read_QIcon("tab_addresses.png"), _("&Addresses"), "addresses")
-        add_optional_tab(tabs, self.channels_tab, read_QIcon("lightning.png"), _("Channels"), "channels")
+        # add_optional_tab(tabs, self.channels_tab, read_QIcon("lightning.png"), _("Channels"), "channels")
         add_optional_tab(tabs, self.utxo_tab, read_QIcon("tab_coins.png"), _("Co&ins"), "utxo")
         add_optional_tab(tabs, self.contacts_tab, read_QIcon("tab_contacts.png"), _("Con&tacts"), "contacts")
         add_optional_tab(tabs, self.console_tab, read_QIcon("tab_console.png"), _("Con&sole"), "console")
@@ -442,17 +442,17 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             self.on_fx_quotes()
         elif event == 'on_history':
             self.on_fx_history()
-        elif event == 'gossip_db_loaded':
-            self.channels_list.gossip_db_loaded.emit(*args)
-        elif event == 'channels_updated':
-            wallet = args[0]
-            if wallet == self.wallet:
-                self.channels_list.update_rows.emit(*args)
-        elif event == 'channel':
-            wallet = args[0]
-            if wallet == self.wallet:
-                self.channels_list.update_single_row.emit(*args)
-                self.update_status()
+        # elif event == 'gossip_db_loaded':
+        #     self.channels_list.gossip_db_loaded.emit(*args)
+        # elif event == 'channels_updated':
+        #     wallet = args[0]
+        #     if wallet == self.wallet:
+        #         self.channels_list.update_rows.emit(*args)
+        # elif event == 'channel':
+        #     wallet = args[0]
+        #     if wallet == self.wallet:
+        #         self.channels_list.update_single_row.emit(*args)
+        #         self.update_status()
         elif event == 'request_status':
             self.on_request_status(*args)
         elif event == 'invoice_status':
@@ -516,7 +516,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         self.update_console()
         self.clear_receive_tab()
         self.request_list.update()
-        self.channels_list.update()
+        # self.channels_list.update()
         self.tabs.show()
         self.init_geometry()
         if self.config.get('hide_gui') and self.gui_object.tray.isVisible():
@@ -734,7 +734,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         view_menu = menubar.addMenu(_("&View"))
         add_toggle_action(view_menu, self.addresses_tab)
         add_toggle_action(view_menu, self.utxo_tab)
-        add_toggle_action(view_menu, self.channels_tab)
+        # add_toggle_action(view_menu, self.channels_tab)
         add_toggle_action(view_menu, self.contacts_tab)
         add_toggle_action(view_menu, self.console_tab)
 
@@ -1019,13 +1019,13 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         self.utxo_list.update()
         self.contact_list.update()
         self.invoice_list.update()
-        self.channels_list.update_rows.emit(wallet)
+        # self.channels_list.update_rows.emit(wallet)
         self.update_completions()
 
-    def create_channels_tab(self):
-        self.channels_list = ChannelsList(self)
-        t = self.channels_list.get_toolbar()
-        return self.create_list_tab(self.channels_list, t)
+    # def create_channels_tab(self):
+    #     self.channels_list = ChannelsList(self)
+    #     t = self.channels_list.get_toolbar()
+    #     return self.create_list_tab(self.channels_list, t)
 
     def create_history_tab(self):
         self.history_model = HistoryModel(self)
@@ -2477,15 +2477,16 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             ks_type = str(keystore_types[0]) if keystore_types else _('No keystore')
             grid.addWidget(WWLabel(ks_type), 4, 1)
         # lightning
-        grid.addWidget(WWLabel(_('Lightning') + ':'), 5, 0)
+        # grid.addWidget(WWLabel(_('Lightning') + ':'), 5, 0)
         from .util import IconLabel
         if self.wallet.has_lightning():
             if self.wallet.lnworker.has_deterministic_node_id():
-                grid.addWidget(WWLabel(_('Enabled')), 5, 1)
+                pass
+                # grid.addWidget(WWLabel(_('Enabled')), 5, 1)
             else:
                 label = IconLabel(text='Enabled, non-recoverable channels')
                 label.setIcon(read_QIcon('nocloud'))
-                grid.addWidget(label, 5, 1)
+                # grid.addWidget(label, 5, 1)
                 if self.wallet.db.get('seed_type') == 'segwit':
                     msg = _("Your channels cannot be recovered from seed, because they were created with an old version of Electrum. "
                             "This means that you must save a backup of your wallet everytime you create a new channel.\n\n"
@@ -2494,8 +2495,8 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
                     msg = _("Your channels cannot be recovered from seed. "
                             "This means that you must save a backup of your wallet everytime you create a new channel.\n\n"
                             "If you want to have recoverable channels, you must create a new wallet with an Electrum seed")
-                grid.addWidget(HelpButton(msg), 5, 3)
-            grid.addWidget(WWLabel(_('Lightning Node ID:')), 7, 0)
+                # grid.addWidget(HelpButton(msg), 5, 3)
+            # grid.addWidget(WWLabel(_('Lightning Node ID:')), 7, 0)
             # TODO: ButtonsLineEdit should have a addQrButton method
             nodeid_text = self.wallet.lnworker.node_keypair.pubkey.hex()
             nodeid_e = ButtonsLineEdit(nodeid_text)
@@ -2504,16 +2505,17 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             nodeid_e.addCopyButton(self.app)
             nodeid_e.setReadOnly(True)
             nodeid_e.setFont(QFont(MONOSPACE_FONT))
-            grid.addWidget(nodeid_e, 8, 0, 1, 4)
+            # grid.addWidget(nodeid_e, 8, 0, 1, 4)
         else:
             if self.wallet.can_have_lightning():
-                grid.addWidget(WWLabel('Not enabled'), 5, 1)
+                # grid.addWidget(WWLabel('Not enabled'), 5, 1)
                 button = QPushButton(_("Enable"))
                 button.pressed.connect(lambda: self.init_lightning_dialog(dialog))
-                grid.addWidget(button, 5, 3)
+                # grid.addWidget(button, 5, 3)
             else:
-                grid.addWidget(WWLabel(_("Not available for this wallet.")), 5, 1)
-                grid.addWidget(HelpButton(_("Lightning is currently restricted to HD wallets with p2wpkh addresses.")), 5, 2)
+                pass
+                # grid.addWidget(WWLabel(_("Not available for this wallet.")), 5, 1)
+                # grid.addWidget(HelpButton(_("Lightning is currently restricted to HD wallets with p2wpkh addresses.")), 5, 2)
         vbox.addLayout(grid)
 
         labels_clayout = None

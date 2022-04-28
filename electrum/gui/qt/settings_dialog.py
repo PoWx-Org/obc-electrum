@@ -127,7 +127,7 @@ class SettingsDialog(WindowModalDialog):
         tx_widgets.append((batch_rbf_cb, None))
 
         # lightning
-        lightning_widgets = []
+        # lightning_widgets = []
 
         if self.wallet.lnworker and self.wallet.lnworker.has_deterministic_node_id():
             help_recov = _(messages.MSG_RECOVERABLE_CHANNELS)
@@ -138,7 +138,7 @@ class SettingsDialog(WindowModalDialog):
                 self.config.set_key('use_recoverable_channels', bool(x))
             recov_cb.stateChanged.connect(on_recov_checked)
             recov_cb.setEnabled(not bool(self.config.get('lightning_listen')))
-            lightning_widgets.append((recov_cb, None))
+            # lightning_widgets.append((recov_cb, None))
 
         help_trampoline = _(messages.MSG_HELP_TRAMPOLINE)
         trampoline_cb = QCheckBox(_("Use trampoline routing (disable gossip)"))
@@ -156,7 +156,7 @@ class SettingsDialog(WindowModalDialog):
             # FIXME: update all wallet windows
             util.trigger_callback('channels_updated', self.wallet)
         trampoline_cb.stateChanged.connect(on_trampoline_checked)
-        lightning_widgets.append((trampoline_cb, None))
+        # lightning_widgets.append((trampoline_cb, None))
 
         help_remote_wt = ' '.join([
             _("A watchtower is a daemon that watches your channels and prevents the other party from stealing funds by broadcasting an old state."),
@@ -177,7 +177,7 @@ class SettingsDialog(WindowModalDialog):
             url = self.watchtower_url_e.text() or None
             watchtower_url = self.config.set_key('watchtower_url', url)
         self.watchtower_url_e.editingFinished.connect(on_wt_url)
-        lightning_widgets.append((remote_wt_cb, self.watchtower_url_e))
+        # lightning_widgets.append((remote_wt_cb, self.watchtower_url_e))
 
         msg = _('OpenAlias record, used to receive coins and to sign payment requests.') + '\n\n'\
               + _('The following alias providers are available:') + '\n'\
@@ -199,7 +199,7 @@ class SettingsDialog(WindowModalDialog):
                 self.config.set_key('amt_precision_post_satoshi', prec)
                 self.window.need_update.set()
         msat_cb.stateChanged.connect(on_msat_checked)
-        lightning_widgets.append((msat_cb, None))
+        # lightning_widgets.append((msat_cb, None))
 
         # units
         units = base_units_list
@@ -501,7 +501,7 @@ class SettingsDialog(WindowModalDialog):
         tabs_info = [
             (gui_widgets, _('General')),
             (tx_widgets, _('Transactions')),
-            (lightning_widgets, _('Lightning')),
+            # (lightning_widgets, _('Lightning')),
             (fiat_widgets, _('Fiat')),
             (oa_widgets, _('OpenAlias')),
         ]
