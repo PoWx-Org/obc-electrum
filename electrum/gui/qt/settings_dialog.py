@@ -437,7 +437,7 @@ class SettingsDialog(WindowModalDialog):
                 c = self.fx.get_currency()
                 exchanges = self.fx.get_exchanges_by_ccy(c, h)
             else:
-                exchanges = self.fx.get_exchanges_by_ccy('USD', False)
+                exchanges = self.fx.get_exchanges_by_ccy('USDT', False)
             ex_combo.blockSignals(True)
             ex_combo.clear()
             ex_combo.addItems(sorted(exchanges))
